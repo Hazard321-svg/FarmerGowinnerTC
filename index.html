@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>No Play No Gain — Đọc Vị Trận Đấu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0D1117;
+      --surface:   #161B22;
+      --card:      #1C2128;
+      --border:    #30363D;
+      --green:     #00FF87;
+      --green-dim: #00C96B;
+      --red:       #FF4D6D;
+      --gold:      #FFD700;
+      --text:      #E6EDF3;
+      --muted:     #8B949E;
+      --draw:      #A78BFA;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: var(--green);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+
+    .logo-text {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 1px;
+      color: var(--text);
+    }
+
+    .logo-text span { color: var(--green); }
+
+    nav { display: flex; gap: 6px; }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .nav-btn.active, .nav-btn:hover {
+      background: var(--green);
+      color: #000;
+      border-color: var(--green);
+      font-weight: 600;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 48px 24px 32px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .hero-eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 12px;
+    }
+
+    .hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(40px, 8vw, 72px);
+      line-height: 1;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--green);
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 480px;
+      line-height: 1.6;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 32px;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+
+    .stat { display: flex; flex-direction: column; gap: 2px; }
+
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 32px;
+      color: var(--green);
+      line-height: 1;
+    }
+
+    .stat-label { font-size: 12px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+    /* ── SECTION ── */
+    .section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px 60px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 1px;
+      color: var(--text);
+    }
+
+    .section-tag {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── MATCH CARD ── */
+    .match-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 14px;
+      transition: border-color 0.2s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .match-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--green);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .match-card:hover {
+      border-color: var(--green);
+      transform: translateX(2px);
+    }
+
+    .match-card:hover::before { opacity: 1; }
+
+    .match-card.live::before { opacity: 1; background: var(--red); }
+    .match-card.live { border-color: rgba(255,77,109,0.4); }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .match-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .league-badge {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #000;
+      background: var(--green);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .league-badge.ucl { background: #1DA1F2; }
+    .league-badge.wc { background: var(--gold); color: #000; }
+
+    .match-time {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .live-dot {
+      width: 7px; height: 7px;
+      background: var(--red);
+      border-radius: 50%;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    /* Teams row */
+    .teams-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
+
+    .team {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .team.away { flex-direction: row-reverse; }
+
+    .team-flag {
+      font-size: 28px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .team-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 1px;
+      color: var(--text);
+    }
+
+    .vs-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .vs-text {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 2px;
+    }
+
+    .match-score {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px;
+      color: var(--green);
+      letter-spacing: 3px;
+    }
+
+    /* Odds bar — the signature element */
+    .odds-section { margin-bottom: 14px; }
+
+    .odds-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .odds-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .odds-val {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      min-width: 38px;
+      text-align: center;
+    }
+
+    .odds-val.home { color: var(--green); }
+    .odds-val.draw { color: var(--draw); }
+    .odds-val.away { color: var(--red); }
+
+    .odds-bar {
+      flex: 1;
+      height: 8px;
+      border-radius: 99px;
+      background: var(--border);
+      overflow: hidden;
+      display: flex;
+      gap: 2px;
+    }
+
+    .bar-home {
+      height: 100%;
+      background: var(--green);
+      border-radius: 99px 0 0 99px;
+      transition: width 0.8s cubic-bezier(.4,0,.2,1);
+    }
+
+    .bar-draw {
+      height: 100%;
+      background: var(--draw);
+      transition: width 0.8s cubic-bezier(.4,0,.2,1);
+    }
+
+    .bar-away {
+      height: 100%;
+      background: var(--red);
+      border-radius: 0 99px 99px 0;
+      transition: width 0.8s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* Prediction row */
+    .prediction-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .prediction-label {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .prediction-label::before {
+      content: '🔮';
+      font-size: 13px;
+    }
+
+    .prediction-pick {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green);
+      background: rgba(0,255,135,0.1);
+      border: 1px solid rgba(0,255,135,0.25);
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    .prediction-pick.lose { color: var(--red); background: rgba(255,77,109,0.1); border-color: rgba(255,77,109,0.25); }
+    .prediction-pick.draw { color: var(--draw); background: rgba(167,139,250,0.1); border-color: rgba(167,139,250,0.25); }
+
+    .confidence {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .conf-dots { display: flex; gap: 3px; }
+
+    .conf-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .conf-dot.filled { background: var(--gold); }
+
+    /* ── FEATURED MATCH ── */
+    .featured-card {
+      background: linear-gradient(135deg, #161B22 0%, #1C2128 60%, #0D1F12 100%);
+      border: 1px solid rgba(0,255,135,0.3);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .featured-card::after {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(0,255,135,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .featured-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      border: 1px solid rgba(255,215,0,0.3);
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+
+    .featured-teams {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .featured-team {
+      text-align: center;
+      flex: 1;
+    }
+
+    .featured-flag { font-size: 52px; line-height: 1; margin-bottom: 8px; }
+
+    .featured-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 2px;
+    }
+
+    .featured-vs {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      color: var(--muted);
+      letter-spacing: 4px;
+      padding: 0 16px;
+    }
+
+    .featured-analysis {
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+      border-left: 3px solid var(--green);
+    }
+
+    .featured-analysis strong { color: var(--text); }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    footer span { color: var(--green); }
+
+    /* ── NFT BACKGROUND ── */
+    #nft-canvas {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0; pointer-events: none;
+    }
+    body > *:not(#nft-canvas) { position: relative; z-index: 1; }
+
+    /* Floating NFT cards */
+    .nft-float {
+      position: fixed;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.13;
+      animation: floatNFT linear infinite;
+      user-select: none;
+    }
+    @keyframes floatNFT {
+      0%   { transform: translateY(110vh) rotate(0deg) scale(0.8); opacity: 0; }
+      5%   { opacity: 0.13; }
+      95%  { opacity: 0.13; }
+      100% { transform: translateY(-20vh) rotate(360deg) scale(1.1); opacity: 0; }
+    }
+
+    /* Glitch effect on logo */
+    .logo-text {
+      position: relative;
+      animation: glitch 4s infinite;
+    }
+    @keyframes glitch {
+      0%,90%,100% { text-shadow: none; }
+      92% { text-shadow: -3px 0 #ff00ff, 3px 0 #00ffff; transform: skewX(-2deg); }
+      94% { text-shadow: 3px 0 #ff00ff, -3px 0 #00ffff; transform: skewX(2deg); }
+      96% { text-shadow: none; transform: skewX(0); }
+    }
+
+    /* Scan line overlay */
+    body::after {
+      content: '';
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,255,135,0.015) 2px,
+        rgba(0,255,135,0.015) 4px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* Neon pulse on cards */
+    .match-card {
+      animation: neonPulse 3s ease-in-out infinite alternate;
+    }
+    @keyframes neonPulse {
+      from { box-shadow: 0 0 0px transparent; }
+      to   { box-shadow: 0 0 12px rgba(0,255,135,0.06); }
+    }
+    .match-card.live {
+      animation: neonPulseLive 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes neonPulseLive {
+      from { box-shadow: 0 0 4px rgba(255,77,109,0.2); }
+      to   { box-shadow: 0 0 20px rgba(255,77,109,0.45); }
+    }
+
+    /* Featured card glow */
+    .featured-card {
+      animation: featuredGlow 2.5s ease-in-out infinite alternate;
+    }
+    @keyframes featuredGlow {
+      from { box-shadow: 0 0 10px rgba(0,255,135,0.1); }
+      to   { box-shadow: 0 0 35px rgba(0,255,135,0.25), 0 0 60px rgba(0,255,135,0.08); }
+    }
+
+    /* Ticker tape at top */
+    .ticker-wrap {
+      background: #00FF87;
+      color: #000;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 13px;
+      letter-spacing: 2px;
+      overflow: hidden;
+      white-space: nowrap;
+      padding: 5px 0;
+      position: relative;
+      z-index: 200;
+    }
+    .ticker-inner {
+      display: inline-block;
+      animation: ticker 30s linear infinite;
+    }
+    @keyframes ticker {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* Hero text shimmer */
+    .hero h1 em {
+      background: linear-gradient(90deg, #00FF87, #00ffff, #a855f7, #00FF87);
+      background-size: 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 0% 50%; }
+      100% { background-position: 300% 50%; }
+    }
+
+    /* Grid overlay */
+    .grid-overlay {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-image:
+        linear-gradient(rgba(0,255,135,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,135,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── UNIFIED ODDS LAYOUT ── */
+    .odds-label-new {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    .main-odds {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .main-odds-home {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      color: var(--text);
+      letter-spacing: 0.5px;
+    }
+
+    .main-odds-sep {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    /* Sub-odds: 4 hàng riêng */
+    .sub-odds-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+
+    .sub-row {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    .sub-cell {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex: 1;
+      text-align: center;
+      align-items: center;
+    }
+
+    .sub-cell.solo {
+      flex: 1;
+      text-align: center;
+      align-items: center;
+    }
+
+    .sub-cell-tag {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+    }
+
+    .sub-cell-val {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      letter-spacing: 0.3px;
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 0 16px; }
+      nav .nav-btn:not(.active) { display: none; }
+      .hero { padding: 32px 16px 24px; }
+      .section { padding: 0 16px 40px; }
+      .featured-card { padding: 20px 16px; }
+      .featured-flag { font-size: 36px; }
+      .featured-name { font-size: 20px; }
+      .team-name { font-size: 16px; }
+      .match-card { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Grid overlay -->
+<div class="grid-overlay"></div>
+
+<!-- Particle canvas -->
+<canvas id="nft-canvas"></canvas>
+
+<!-- Ticker -->
+<div class="ticker-wrap">
+  <div class="ticker-inner">
+    ⚽ NO PLAY NO GAIN &nbsp;★&nbsp; ĐỌC VỊ TRẬN ĐẤU &nbsp;★&nbsp; NHẬN ĐỊNH CHUYÊN SÂU &nbsp;★&nbsp; WORLD CUP 2026 &nbsp;★&nbsp; SỨC MẠNH ĐỐI ĐẦU &nbsp;★&nbsp; NO PLAY NO GAIN &nbsp;★&nbsp; ĐỌC VỊ TRẬN ĐẤU &nbsp;★&nbsp; NHẬN ĐỊNH CHUYÊN SÂU &nbsp;★&nbsp; WORLD CUP 2026 &nbsp;★&nbsp; SỨC MẠNH ĐỐI ĐẦU &nbsp;★&nbsp;
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚽</div>
+    <div class="logo-text">NO PLAY<span> NO GAIN</span></div>
+  </div>
+  <nav>
+    <button class="nav-btn active">Hôm nay</button>
+    <button class="nav-btn">Tuần này</button>
+    <button class="nav-btn">Kết quả</button>
+  </nav>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">⚡ Đọc vị trận đấu · Góc nhìn có chiều sâu</div>
+  <h1>NO PLAY<br/><em>NO GAIN</em></h1>
+  <p>Đọc vị phong độ, sức mạnh đội hình và lịch sử đối đầu — không cảm tính, chỉ có số liệu.</p>
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-num">74%</div>
+      <div class="stat-label">Độ chính xác</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">142</div>
+      <div class="stat-label">Trận đã đọc vị</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">6</div>
+      <div class="stat-label">Trận hôm nay</div>
+    </div>
+  </div>
+</div>
+
+<!-- REMOVED --><div style="display:none"><div style=""><div style="">
+    <svg width="100%" viewBox="0 0 900 280" xmlns="http://www.w3.org/2000/svg">
+      <!-- Background field -->
+      <rect width="900" height="280" fill="#0D1117"/>
+      <!-- Grass stripes -->
+      <rect x="0" y="200" width="900" height="80" fill="#0D2010"/>
+      <rect x="0" y="200" width="900" height="6" fill="#00FF87" opacity="0.15"/>
+      <!-- Center line -->
+      <line x1="450" y1="200" x2="450" y2="280" stroke="#00FF87" stroke-width="1" opacity="0.3"/>
+      <ellipse cx="450" cy="280" rx="60" ry="20" fill="none" stroke="#00FF87" stroke-width="1" opacity="0.2"/>
+
+      <!-- Stars bg -->
+      <circle cx="120" cy="40" r="1.5" fill="#FFD700" opacity="0.4"/>
+      <circle cx="200" cy="20" r="1" fill="#fff" opacity="0.3"/>
+      <circle cx="350" cy="55" r="1" fill="#fff" opacity="0.2"/>
+      <circle cx="700" cy="30" r="1.5" fill="#FFD700" opacity="0.4"/>
+      <circle cx="780" cy="15" r="1" fill="#fff" opacity="0.3"/>
+      <circle cx="600" cy="50" r="1" fill="#fff" opacity="0.2"/>
+
+      <!-- ═══ MESSI (left) ═══ -->
+      <!-- Shadow -->
+      <ellipse cx="210" cy="272" rx="45" ry="8" fill="#000" opacity="0.4"/>
+      <!-- Body (light blue Argentina) -->
+      <rect x="168" y="148" width="70" height="75" rx="10" fill="#74ACDF"/>
+      <!-- Stripes on jersey -->
+      <rect x="178" y="148" width="12" height="75" rx="2" fill="#fff" opacity="0.5"/>
+      <rect x="196" y="148" width="12" height="75" rx="2" fill="#fff" opacity="0.5"/>
+      <!-- Arms -->
+      <rect x="140" y="150" width="28" height="18" rx="9" fill="#74ACDF"/>
+      <rect x="238" y="150" width="28" height="18" rx="9" fill="#74ACDF"/>
+      <!-- Hands -->
+      <circle cx="136" cy="162" r="10" fill="#F5C5A0"/>
+      <circle cx="270" cy="162" r="10" fill="#F5C5A0"/>
+      <!-- Left hand: holding trophy -->
+      <rect x="118" y="142" width="22" height="28" rx="4" fill="#FFD700"/>
+      <rect x="122" y="130" width="14" height="16" rx="3" fill="#FFD700"/>
+      <ellipse cx="129" cy="128" rx="10" ry="7" fill="#FFD700"/>
+      <text x="129" y="131" text-anchor="middle" font-size="8" fill="#000" font-weight="bold">★</text>
+      <!-- Shorts -->
+      <rect x="168" y="218" width="30" height="35" rx="5" fill="#000060"/>
+      <rect x="203" y="218" width="30" height="35" rx="5" fill="#000060"/>
+      <!-- Socks & boots -->
+      <rect x="170" y="248" width="26" height="20" rx="3" fill="#fff"/>
+      <rect x="205" y="248" width="26" height="20" rx="3" fill="#fff"/>
+      <rect x="168" y="260" width="30" height="12" rx="4" fill="#111"/>
+      <rect x="203" y="260" width="30" height="12" rx="4" fill="#111"/>
+      <!-- Neck -->
+      <rect x="193" y="128" width="20" height="25" rx="5" fill="#F5C5A0"/>
+      <!-- Head -->
+      <ellipse cx="203" cy="112" rx="34" ry="36" fill="#F5C5A0"/>
+      <!-- Hair (dark, messy Messi style) -->
+      <ellipse cx="203" cy="83" rx="34" ry="16" fill="#2C1A0E"/>
+      <ellipse cx="180" cy="90" rx="14" ry="10" fill="#2C1A0E"/>
+      <ellipse cx="226" cy="90" rx="12" ry="8" fill="#2C1A0E"/>
+      <!-- Eyes (happy) -->
+      <ellipse cx="190" cy="110" rx="6" ry="7" fill="#fff"/>
+      <ellipse cx="216" cy="110" rx="6" ry="7" fill="#fff"/>
+      <circle cx="192" cy="111" r="4" fill="#3B2000"/>
+      <circle cx="218" cy="111" r="4" fill="#3B2000"/>
+      <circle cx="193" cy="109" r="1.5" fill="#fff"/>
+      <circle cx="219" cy="109" r="1.5" fill="#fff"/>
+      <!-- Eyebrows (smug) -->
+      <path d="M184 102 Q190 98 196 101" stroke="#2C1A0E" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M210 101 Q216 98 222 102" stroke="#2C1A0E" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- Big smile -->
+      <path d="M187 126 Q203 140 219 126" stroke="#C0703A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- Beard -->
+      <ellipse cx="203" cy="133" rx="18" ry="8" fill="#5C3A1E" opacity="0.5"/>
+      <!-- Ear -->
+      <ellipse cx="169" cy="113" rx="7" ry="9" fill="#F5C5A0"/>
+      <ellipse cx="237" cy="113" rx="7" ry="9" fill="#F5C5A0"/>
+      <!-- Name -->
+      <text x="203" y="298" text-anchor="middle" font-size="14" font-weight="bold" fill="#74ACDF" font-family="Arial">MESSI</text>
+      <!-- Stars above -->
+      <text x="203" y="60" text-anchor="middle" font-size="16" fill="#FFD700">★★★</text>
+      <!-- Speech bubble -->
+      <rect x="270" y="55" width="150" height="55" rx="14" fill="#1C2128" stroke="#00FF87" stroke-width="1.5"/>
+      <polygon points="275,95 258,108 285,95" fill="#1C2128"/>
+      <line x1="275" y1="95" x2="258" y2="108" stroke="#00FF87" stroke-width="1.5"/>
+      <line x1="285" y1="95" x2="258" y2="108" stroke="#1C2128" stroke-width="2"/>
+      <text x="345" y="77" text-anchor="middle" font-size="12" fill="#00FF87" font-weight="bold" font-family="Arial">Mày có</text>
+      <text x="345" y="93" text-anchor="middle" font-size="12" fill="#00FF87" font-weight="bold" font-family="Arial">mấy Ballon d'Or? 😏</text>
+
+      <!-- ═══ RONALDO (right) ═══ -->
+      <!-- Shadow -->
+      <ellipse cx="690" cy="272" rx="45" ry="8" fill="#000" opacity="0.4"/>
+      <!-- Body (red Portugal) -->
+      <rect x="648" y="148" width="70" height="75" rx="10" fill="#CC0000"/>
+      <!-- Jersey details -->
+      <rect x="670" y="148" width="8" height="40" rx="2" fill="#8B0000" opacity="0.5"/>
+      <!-- Arms (muscular - bigger) -->
+      <rect x="618" y="148" width="32" height="20" rx="10" fill="#CC0000"/>
+      <rect x="718" y="148" width="32" height="20" rx="10" fill="#CC0000"/>
+      <!-- Hands -->
+      <circle cx="614" cy="162" r="11" fill="#D4956A"/>
+      <!-- Right hand: pointing at mirror -->
+      <rect x="748" y="136" width="16" height="40" rx="4" fill="#C0C0C0" opacity="0.8"/>
+      <ellipse cx="756" cy="136" rx="12" ry="8" fill="#C0C0C0" opacity="0.8"/>
+      <!-- Mirror reflection (CR7 admiring himself) -->
+      <text x="757" y="132" text-anchor="middle" font-size="10" fill="#FFD700">★</text>
+      <!-- Shorts -->
+      <rect x="648" y="218" width="30" height="35" rx="5" fill="#006600"/>
+      <rect x="683" y="218" width="30" height="35" rx="5" fill="#006600"/>
+      <!-- Socks & boots -->
+      <rect x="650" y="248" width="26" height="20" rx="3" fill="#fff"/>
+      <rect x="685" y="248" width="26" height="20" rx="3" fill="#fff"/>
+      <rect x="648" y="260" width="30" height="12" rx="4" fill="#111"/>
+      <rect x="683" y="260" width="30" height="12" rx="4" fill="#111"/>
+      <!-- Neck (thick) -->
+      <rect x="673" y="125" width="24" height="28" rx="6" fill="#D4956A"/>
+      <!-- Head (square jaw) -->
+      <rect x="655" y="78" width="70" height="65" rx="22" fill="#D4956A"/>
+      <!-- Hair (slicked back CR7) -->
+      <rect x="655" y="74" width="70" height="22" rx="12" fill="#1A0A00"/>
+      <path d="M655 85 Q685 68 725 85" fill="#1A0A00"/>
+      <!-- Perfect hair line -->
+      <path d="M660 88 Q685 76 720 88" stroke="#2C1A0E" stroke-width="1" fill="none"/>
+      <!-- Eyes (intense stare) -->
+      <ellipse cx="675" cy="110" rx="7" ry="7" fill="#fff"/>
+      <ellipse cx="705" cy="110" rx="7" ry="7" fill="#fff"/>
+      <circle cx="677" cy="111" r="4.5" fill="#2C5F2E"/>
+      <circle cx="707" cy="111" r="4.5" fill="#2C5F2E"/>
+      <circle cx="678" cy="109" r="1.5" fill="#fff"/>
+      <circle cx="708" cy="109" r="1.5" fill="#fff"/>
+      <!-- Eyebrows (dramatic) -->
+      <path d="M667 101 Q675 96 683 100" stroke="#1A0A00" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M697 100 Q705 96 713 101" stroke="#1A0A00" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <!-- Siu mouth / smirk -->
+      <path d="M672 132 Q685 138 698 132" stroke="#C07050" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- Jaw definition -->
+      <path d="M658 120 Q655 138 668 148" stroke="#C07050" stroke-width="1" fill="none" opacity="0.4"/>
+      <path d="M722 120 Q725 138 712 148" stroke="#C07050" stroke-width="1" fill="none" opacity="0.4"/>
+      <!-- Ear -->
+      <ellipse cx="655" cy="113" rx="7" ry="9" fill="#D4956A"/>
+      <ellipse cx="725" cy="113" rx="7" ry="9" fill="#D4956A"/>
+      <!-- Name -->
+      <text x="690" y="298" text-anchor="middle" font-size="14" font-weight="bold" fill="#CC0000" font-family="Arial">RONALDO</text>
+      <!-- Stars above -->
+      <text x="690" y="60" text-anchor="middle" font-size="16" fill="#FFD700">★★★</text>
+      <!-- Speech bubble -->
+      <rect x="475" y="55" width="160" height="55" rx="14" fill="#1C2128" stroke="#FF4D6D" stroke-width="1.5"/>
+      <polygon points="625,95 645,108 615,95" fill="#1C2128"/>
+      <line x1="625" y1="95" x2="645" y2="108" stroke="#FF4D6D" stroke-width="1.5"/>
+      <line x1="615" y1="95" x2="645" y2="108" stroke="#1C2128" stroke-width="2"/>
+      <text x="555" y="77" text-anchor="middle" font-size="12" fill="#FF4D6D" font-weight="bold" font-family="Arial">SIUUUU! Tao</text>
+      <text x="555" y="93" text-anchor="middle" font-size="12" fill="#FF4D6D" font-weight="bold" font-family="Arial">đẹp trai hơn 💪</text>
+
+      <!-- VS in middle -->
+      <circle cx="450" cy="155" r="38" fill="#0D1117" stroke="#FFD700" stroke-width="2"/>
+      <text x="450" y="148" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFD700" font-family="Arial">VS</text>
+      <text x="450" y="168" text-anchor="middle" font-size="9" fill="#8B949E" font-family="Arial">GOAT DEBATE</text>
+</div></div></div>
+
+<!-- FEATURED MATCH -->
+<div class="section">
+  <div class="featured-card">
+    <div class="featured-badge">⭐ Trận nổi bật · 04:00</div>
+    <div class="featured-teams">
+      <div class="featured-team">
+        <div class="featured-flag"></div>
+        <div class="featured-name">Panama</div>
+      </div>
+      <div class="featured-vs">VS</div>
+      <div class="featured-team">
+        <div class="featured-flag"></div>
+        <div class="featured-name">Anh</div>
+      </div>
+    </div>
+
+    <div class="odds-label-new">Tỷ lệ</div>
+    <div class="main-odds">
+      <span class="main-odds-home">Panama +2.25/<strong style="color:var(--green)">2.00</strong></span>
+      <span class="main-odds-sep">·</span>
+      <span class="main-odds-home">Anh -2.25/<strong style="color:var(--red)">1.9</strong></span>
+    </div>
+    <div class="sub-odds-grid">
+      <div class="sub-row">
+        <div class="sub-cell"><div class="sub-cell-tag">Tài</div><div class="sub-cell-val">3.25 / 1.84</div></div>
+        <div class="sub-cell"><div class="sub-cell-tag">Xỉu</div><div class="sub-cell-val">3.25 / 2.04</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell solo"><div class="sub-cell-tag">Góc Tài / Xỉu</div><div class="sub-cell-val">9.5 / 1.77 &nbsp;·&nbsp; 9.5 / 2.05</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell solo"><div class="sub-cell-tag">Hiệp 1 — Kèo chấp</div><div class="sub-cell-val">Panama +1/2.08 &nbsp;·&nbsp; Anh -1/1.82</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell"><div class="sub-cell-tag">Tài H1</div><div class="sub-cell-val">1.5 / 1.95</div></div>
+        <div class="sub-cell"><div class="sub-cell-tag">Xỉu H1</div><div class="sub-cell-val">1.5 / 1.93</div></div>
+      </div>
+    </div>
+
+  <!-- MATCH LIST -->
+  <div class="section-header">
+    <div class="section-title">Các trận hôm nay</div>
+    <div class="section-tag">28 tháng 6 · 2026</div>
+  </div>
+
+  <!-- Card 1 — Croatia vs Ghana -->
+  <div class="match-card">
+    <div class="card-top">
+      <div class="match-meta">
+        <span class="league-badge wc">World Cup</span>
+        <div class="match-time">🕐 04:00</div>
+      </div>
+    </div>
+    <div class="teams-row">
+      <div class="team">
+        <div class="team-flag"></div>
+        <div class="team-name">Croatia</div>
+      </div>
+      <div class="vs-block"><div class="vs-text">VS</div></div>
+      <div class="team away">
+        <div class="team-flag"></div>
+        <div class="team-name">Ghana</div>
+      </div>
+    </div>
+    <div class="odds-label-new">Tỷ lệ</div>
+    <div class="main-odds">
+      <span class="main-odds-home">Croatia -0.5/<strong style="color:var(--green)">1.95</strong></span>
+      <span class="main-odds-sep">·</span>
+      <span class="main-odds-home">Ghana +0.5/<strong style="color:var(--red)">1.95</strong></span>
+    </div>
+    <div class="sub-odds-grid">
+      <div class="sub-row">
+        <div class="sub-cell"><div class="sub-cell-tag">Tài</div><div class="sub-cell-val">2 / 1.87</div></div>
+        <div class="sub-cell"><div class="sub-cell-tag">Xỉu</div><div class="sub-cell-val">2 / 2.01</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell solo"><div class="sub-cell-tag">Góc Tài / Xỉu</div><div class="sub-cell-val">8.5 / 1.91 &nbsp;·&nbsp; 8.5 / 1.91</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell solo"><div class="sub-cell-tag">Hiệp 1 — Kèo chấp</div><div class="sub-cell-val">Croatia -0.25/2.12 &nbsp;·&nbsp; Ghana +0.25/1.79</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell"><div class="sub-cell-tag">Tài H1</div><div class="sub-cell-val">0.75 / 1.85</div></div>
+        <div class="sub-cell"><div class="sub-cell-tag">Xỉu H1</div><div class="sub-cell-val">0.75 / 2.03</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2 — Colombia vs Bồ Đào Nha -->
+  <div class="match-card">
+    <div class="card-top">
+      <div class="match-meta">
+        <span class="league-badge wc">World Cup</span>
+        <div class="match-time">🕐 04:00</div>
+      </div>
+    </div>
+    <div class="teams-row">
+      <div class="team">
+        <div class="team-flag"></div>
+        <div class="team-name">Colombia</div>
+      </div>
+      <div class="vs-block"><div class="vs-text">VS</div></div>
+      <div class="team away">
+        <div class="team-flag"></div>
+        <div class="team-name">Bồ Đào Nha</div>
+      </div>
+    </div>
+    <div class="odds-label-new">Tỷ lệ</div>
+    <div class="main-odds">
+      <span class="main-odds-home">Colombia +0.5/<strong style="color:var(--green)">2.00</strong></span>
+      <span class="main-odds-sep">·</span>
+      <span class="main-odds-home">Bồ Đào Nha -0.5/<strong style="color:var(--red)">1.9</strong></span>
+    </div>
+    <div class="sub-odds-grid">
+      <div class="sub-row">
+        <div class="sub-cell"><div class="sub-cell-tag">Tài</div><div class="sub-cell-val">2.75 / 1.96</div></div>
+        <div class="sub-cell"><div class="sub-cell-tag">Xỉu</div><div class="sub-cell-val">2.75 / 1.92</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell solo"><div class="sub-cell-tag">Góc Tài / Xỉu</div><div class="sub-cell-val">9.5 / 2.09 &nbsp;·&nbsp; 9.5 / 1.73</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell solo"><div class="sub-cell-tag">Hiệp 1 — Kèo chấp</div><div class="sub-cell-val">Colombia +0.25/1.91 &nbsp;·&nbsp; Bồ Đào Nha -0.25/1.95</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell"><div class="sub-cell-tag">Tài H1</div><div class="sub-cell-val">1 / 1.71</div></div>
+        <div class="sub-cell"><div class="sub-cell-tag">Xỉu H1</div><div class="sub-cell-val">1 / 2.20</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3 — Congo vs Uzbekistan -->
+  <div class="match-card">
+    <div class="card-top">
+      <div class="match-meta">
+        <span class="league-badge wc">World Cup</span>
+        <div class="match-time">🕐 06:30</div>
+      </div>
+    </div>
+    <div class="teams-row">
+      <div class="team">
+        <div class="team-flag"></div>
+        <div class="team-name">Congo</div>
+      </div>
+      <div class="vs-block"><div class="vs-text">VS</div></div>
+      <div class="team away">
+        <div class="team-flag"></div>
+        <div class="team-name">Uzbekistan</div>
+      </div>
+    </div>
+    <div class="odds-label-new">Tỷ lệ</div>
+    <div class="main-odds">
+      <span class="main-odds-home">Congo -0.75/<strong style="color:var(--green)">1.90</strong></span>
+      <span class="main-odds-sep">·</span>
+      <span class="main-odds-home">Uzbekistan +0.75/<strong style="color:var(--red)">2.00</strong></span>
+    </div>
+    <div class="sub-odds-grid">
+      <div class="sub-row">
+        <div class="sub-cell"><div class="sub-cell-tag">Tài</div><div class="sub-cell-val">2.25 / 1.91</div></div>
+        <div class="sub-cell"><div class="sub-cell-tag">Xỉu</div><div class="sub-cell-val">2.25 / 1.97</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell solo"><div class="sub-cell-tag">Góc Tài / Xỉu</div><div class="sub-cell-val">8.5 / 1.9 &nbsp;·&nbsp; 8.5 / 1.92</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell solo"><div class="sub-cell-tag">Hiệp 1 — Kèo chấp</div><div class="sub-cell-val">Congo -0.25/1.83 &nbsp;·&nbsp; Uzbekistan +0.25/2.07</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell"><div class="sub-cell-tag">Tài H1</div><div class="sub-cell-val">1 / 2.07</div></div>
+        <div class="sub-cell"><div class="sub-cell-tag">Xỉu H1</div><div class="sub-cell-val">1 / 1.81</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 4 — Algeria vs Áo -->
+  <div class="match-card">
+    <div class="card-top">
+      <div class="match-meta">
+        <span class="league-badge wc">World Cup</span>
+        <div class="match-time">🕐 06:30</div>
+      </div>
+    </div>
+    <div class="teams-row">
+      <div class="team">
+        <div class="team-flag"></div>
+        <div class="team-name">Algeria</div>
+      </div>
+      <div class="vs-block"><div class="vs-text">VS</div></div>
+      <div class="team away">
+        <div class="team-flag"></div>
+        <div class="team-name">Áo</div>
+      </div>
+    </div>
+    <div class="odds-label-new">Tỷ lệ</div>
+    <div class="main-odds">
+      <span class="main-odds-home">Algeria 0/<strong style="color:var(--green)">2.06</strong></span>
+      <span class="main-odds-sep">·</span>
+      <span class="main-odds-home">Áo 0/<strong style="color:var(--red)">1.84</strong></span>
+    </div>
+    <div class="sub-odds-grid">
+      <div class="sub-row">
+        <div class="sub-cell"><div class="sub-cell-tag">Tài</div><div class="sub-cell-val">1.75 / 2.01</div></div>
+        <div class="sub-cell"><div class="sub-cell-tag">Xỉu</div><div class="sub-cell-val">1.75 / 1.87</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell solo"><div class="sub-cell-tag">Góc Tài / Xỉu</div><div class="sub-cell-val">7.5 / 1.94 &nbsp;·&nbsp; 7.5 / 1.88</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell solo"><div class="sub-cell-tag">Hiệp 1 — Kèo chấp</div><div class="sub-cell-val">Algeria 0/2.11 &nbsp;·&nbsp; Áo 0/1.80</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell"><div class="sub-cell-tag">Tài H1</div><div class="sub-cell-val">0.75 / 2.23</div></div>
+        <div class="sub-cell"><div class="sub-cell-tag">Xỉu H1</div><div class="sub-cell-val">0.75 / 1.696</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 5 — Jordan vs Argentina -->
+  <div class="match-card">
+    <div class="card-top">
+      <div class="match-meta">
+        <span class="league-badge wc">World Cup</span>
+        <div class="match-time">🕐 09:00</div>
+      </div>
+    </div>
+    <div class="teams-row">
+      <div class="team">
+        <div class="team-flag"></div>
+        <div class="team-name">Jordan</div>
+      </div>
+      <div class="vs-block"><div class="vs-text">VS</div></div>
+      <div class="team away">
+        <div class="team-flag"></div>
+        <div class="team-name">Argentina</div>
+      </div>
+    </div>
+    <div class="odds-label-new">Tỷ lệ</div>
+    <div class="main-odds">
+      <span class="main-odds-home">Jordan +2.25/<strong style="color:var(--green)">1.98</strong></span>
+      <span class="main-odds-sep">·</span>
+      <span class="main-odds-home">Argentina -2.25/<strong style="color:var(--red)">1.92</strong></span>
+    </div>
+    <div class="sub-odds-grid">
+      <div class="sub-row">
+        <div class="sub-cell"><div class="sub-cell-tag">Tài</div><div class="sub-cell-val">3 / 1.79</div></div>
+        <div class="sub-cell"><div class="sub-cell-tag">Xỉu</div><div class="sub-cell-val">3 / 2.09</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell solo"><div class="sub-cell-tag">Góc Tài / Xỉu</div><div class="sub-cell-val">8.5 / 2.07 &nbsp;·&nbsp; 8.5 / 1.75</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell solo"><div class="sub-cell-tag">Hiệp 1 — Kèo chấp</div><div class="sub-cell-val">Jordan +1/1.97 &nbsp;·&nbsp; Argentina -1/1.93</div></div>
+      </div>
+      <div class="sub-row">
+        <div class="sub-cell"><div class="sub-cell-tag">Tài H1</div><div class="sub-cell-val">1.25 / 1.8</div></div>
+        <div class="sub-cell"><div class="sub-cell-tag">Xỉu H1</div><div class="sub-cell-val">1.25 / 2.08</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>Made with ⚽ by <span>No Play No Gain</span> · Chỉ mang tính tham khảo, không phải lời khuyên đầu tư</p>
+</footer>
+
+<script>
+// ── Particle System ──
+const canvas = document.getElementById('nft-canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const particles = [];
+const COLORS = ['#00FF87','#a855f7','#00ffff','#FF4D6D','#FFD700'];
+
+class Particle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.vx = (Math.random() - 0.5) * 0.5;
+    this.vy = (Math.random() - 0.5) * 0.5;
+    this.r = Math.random() * 1.8 + 0.4;
+    this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    this.alpha = Math.random() * 0.5 + 0.1;
+    this.life = 0;
+    this.maxLife = Math.random() * 300 + 200;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.life++;
+    if (this.life > this.maxLife ||
+        this.x < 0 || this.x > canvas.width ||
+        this.y < 0 || this.y > canvas.height) {
+      this.reset();
+    }
+  }
+  draw() {
+    ctx.save();
+    ctx.globalAlpha = this.alpha * (1 - this.life / this.maxLife);
+    ctx.fillStyle = this.color;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// Shooting stars
+class Star {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height * 0.5;
+    this.len = Math.random() * 80 + 40;
+    this.speed = Math.random() * 8 + 4;
+    this.alpha = 0;
+    this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    this.active = false;
+    this.timer = Math.random() * 300;
+  }
+  update() {
+    if (!this.active) { this.timer--; if (this.timer <= 0) this.active = true; return; }
+    this.x += this.speed;
+    this.y += this.speed * 0.4;
+    this.alpha = Math.min(this.alpha + 0.05, 0.7);
+    if (this.x > canvas.width + 100) this.reset();
+  }
+  draw() {
+    if (!this.active) return;
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    const grad = ctx.createLinearGradient(this.x - this.len, this.y - this.len * 0.4, this.x, this.y);
+    grad.addColorStop(0, 'transparent');
+    grad.addColorStop(1, this.color);
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(this.x - this.len, this.y - this.len * 0.4);
+    ctx.lineTo(this.x, this.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// NFT hexagon rings
+class HexRing {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.size = Math.random() * 60 + 20;
+    this.alpha = 0;
+    this.growing = true;
+    this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    this.rot = Math.random() * Math.PI;
+    this.rotSpeed = (Math.random() - 0.5) * 0.005;
+    this.delay = Math.random() * 200;
+  }
+  hex(cx, cy, r, rot) {
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = rot + (i * Math.PI) / 3;
+      const px = cx + r * Math.cos(a);
+      const py = cy + r * Math.sin(a);
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+  }
+  update() {
+    if (this.delay > 0) { this.delay--; return; }
+    if (this.growing) {
+      this.alpha += 0.008;
+      if (this.alpha >= 0.12) this.growing = false;
+    } else {
+      this.alpha -= 0.003;
+      if (this.alpha <= 0) this.reset();
+    }
+    this.rot += this.rotSpeed;
+  }
+  draw() {
+    if (this.delay > 0 || this.alpha <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.strokeStyle = this.color;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 12;
+    ctx.lineWidth = 1;
+    this.hex(this.x, this.y, this.size, this.rot);
+    ctx.stroke();
+    this.hex(this.x, this.y, this.size * 0.6, this.rot + 0.3);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+for (let i = 0; i < 120; i++) particles.push(new Particle());
+const stars = Array.from({length: 5}, () => new Star());
+const hexes = Array.from({length: 18}, () => new HexRing());
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => { p.update(); p.draw(); });
+  stars.forEach(s => { s.update(); s.draw(); });
+  hexes.forEach(h => { h.update(); h.draw(); });
+  requestAnimationFrame(animate);
+}
+animate();
+
+// ── Connect particles nearby ──
+function connectParticles() {
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 80) {
+        ctx.save();
+        ctx.globalAlpha = (1 - dist/80) * 0.08;
+        ctx.strokeStyle = '#00FF87';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+  }
+}
+
+// Override animate to include connections
+cancelAnimationFrame(window._raf);
+function animate2() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => { p.update(); p.draw(); });
+  connectParticles();
+  stars.forEach(s => { s.update(); s.draw(); });
+  hexes.forEach(h => { h.update(); h.draw(); });
+  window._raf = requestAnimationFrame(animate2);
+}
+animate2();
+</script>
+</body>
+</html>
